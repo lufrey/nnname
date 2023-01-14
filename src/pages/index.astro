@@ -2,16 +2,14 @@
 export const prerender = true;
 import Layout from "../layouts/Layout.astro";
 
-const name = Astro.url.searchParams.get("name");
-const letter = name && name[0].toUpperCase();
+const name = Astro.url.searchParams.get("name")?.toLowerCase();
+const letter = name && name[0];
 
 let words: string[] = [];
 // read words from file with letter name
 
 if (letter) {
-  words = await import(`../words/${letter.toLowerCase()}.json`).then(
-    (data) => data.default
-  );
+  words = await import(`../words/${letter}.json`).then((data) => data.default);
 }
 
 // get random word from words
@@ -19,41 +17,49 @@ const word = words[Math.floor(Math.random() * words.length)];
 ---
 
 <Layout title="neue-nice-namen">
-  <main class="m-auto p-6 flex justify-center items-center h-screen">
+  <main class="flex items-center justify-center h-screen p-6 m-auto">
     {
       name ? (
         <div class="flex flex-col">
-          <h1 class="text-center text-5xl m-0 font-extrabold flex h-12">
+          <h1 class="flex flex-wrap justify-center m-0 text-4xl font-extrabold [line-height:1.5] text-center md:[line-height:1.5] md:text-5xl">
             <span
               id="alliteration"
-              class="bg-clip-text text-transparent from-purple-500 to-pink-500 bg-gradient-to-tr leading-10 capitalize"
+              class="inline-block text-transparent capitalize break-all bg-clip-text from-purple-500 to-pink-500 bg-gradient-to-tr"
             >
               Astro
             </span>
-            <span class="leading-10">-</span>
-            <span class="capitalize leading-10">{name}</span>
+            <span class="inline-block">-</span>
+            <span class="capitalize ">{name}</span>
           </h1>
-          <button
-            onclick="window.history.replaceState(null, null, window.location.pathname);window.location.reload();"
-            class="inline w-fit px-4 py-2 m-auto mt-6 bg-slate-200 rounded-md hover:bg-slate-300 transition-colors"
-          >
-            Zurück
-          </button>
+          <div class="flex gap-2 m-auto mt-6">
+            <button
+              id="back-button"
+              class="inline px-4 py-2 text-sm transition-colors rounded-md md:text-base w-fit bg-slate-200 hover:bg-slate-300"
+            >
+              Zurück
+            </button>
+            <button
+              id="new-button"
+              class="inline px-4 py-2 text-sm text-white transition-all rounded-md opacity-90 from-purple-500 to-pink-500 bg-gradient-to-bl md:text-base w-fit hover:opacity-100"
+            >
+              Mehr Mixen
+            </button>
+          </div>
         </div>
       ) : (
         <div class="flex flex-col">
-          <h1 class="text-center text-5xl m-0 font-extrabold">
+          <h1 class="m-0 text-5xl font-extrabold text-center">
             Was ist dein Name?
           </h1>
-          <form class="w-80 m-auto mt-4">
+          <form class="m-auto mt-4 w-80">
             <input
               type="text"
               name="name"
-              class="w-full mt-4 p-2 border-2 border-gray-300 rounded-md"
+              class="w-full p-2 mt-4 border-2 border-gray-300 rounded-md"
             />
             <button
               type="submit"
-              class="inline w-full px-4 py-2 m-auto mt-2 bg-slate-200 rounded-md hover:bg-slate-300 transition-colors"
+              class="inline w-full px-4 py-2 m-auto mt-2 text-sm transition-colors rounded-md md:text-base bg-slate-200 hover:bg-slate-300"
             >
               Weiter
             </button>
@@ -63,7 +69,20 @@ const word = words[Math.floor(Math.random() * words.length)];
     }
   </main>
 </Layout>
-<script define:vars={{ word }}>
+<script define:vars={{ word, letter }}>
   const alliteration = document.getElementById("alliteration");
   alliteration && (alliteration.innerText = word);
+
+  document.getElementById("back-button")?.addEventListener("click", () => {
+    window.history.replaceState(null, null, window.location.pathname);
+    window.location.reload();
+  });
+
+  document.getElementById("new-button")?.addEventListener("click", () => {
+    fetch(`/${letter}.json`)
+      .then((res) => res.json())
+      .then((data) => {
+        alliteration && (alliteration.innerText = data.word);
+      });
+  });
 </script>
